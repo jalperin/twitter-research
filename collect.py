@@ -27,6 +27,10 @@ with litecon:
 	litecur.execute("CREATE INDEX IF NOT EXISTS sample_error ON sample (error)")
 	litecur.execute("CREATE INDEX IF NOT EXISTS sample_modified ON sample (modified)")
 
+	litecur.execute("CREATE TABLE IF NOT EXISTS users (user_id TEXT, screen_name TEXT, user_object TEXT)")
+	litecur.execute("CREATE UNIQUE INDEX IF NOT EXISTS users_user_id ON users (user_id)")
+	litecur.execute("CREATE INDEX IF NOT EXISTS users_screen_name ON users (screen_name)")
+
 
 consumer_key = Config.get('twitter', 'consumer_key')
 consumer_secret = Config.get('twitter', 'consumer_secret')
@@ -100,6 +104,11 @@ def __update_user_id_in_sample(tweet_id, user):
 		litecur = litecon.cursor()
 		if (type(user) != tweepy.TweepError):
 			litecur.execute('UPDATE sample SET user_id = ?, current_screen_name = ?, modified = ? WHERE tweet_id = ?', (user.id, user.screen_name, now, tweet_id))
+			try:
+				litecur.execute('INSERT INTO users (user_id, screen_name, user_object) VALUES (?, ?, ?)', (user.id, user.screen_name, json.dumps(user._json)))
+			except lite.IntegrityError:
+				# don't worry about duplicates
+				pass
 		else:
 			print tweet_id, user
 			try:
