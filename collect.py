@@ -158,7 +158,7 @@ if __name__ == '__main__':
 	if tweet_id: 
 		get_user_from_tweet(tweet_id)
 	elif input_filename:
-		load_file('data/' + input_filename)
+		load_file(input_filename)
 
 	update_user_id_in_sample_batch()
 	update_user_id_in_sample()  # this will go back and fill in individual errors. The batch simply doesn't return errors
