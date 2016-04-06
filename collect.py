@@ -73,7 +73,7 @@ def get_user_from_tweet(tweet_id):
 				time.sleep(15 * 60 + 10)
 				continue
 
-			return error
+			return {tweet_id, error}
 
 	print 'something else went wrong: ' + tweet_id
 	return False
@@ -131,7 +131,7 @@ def update_user_id_in_sample():
 
 		for s in sampled:
 			tweet_id = s[0]
-			for tweet_id, user in get_user_from_tweet(tweet_id):
+			for tweet_id, user in get_user_from_tweet(tweet_id).iteritems():
 				__update_user_id_in_sample(tweet_id, user)
 			
 
@@ -169,7 +169,7 @@ if __name__ == '__main__':
 	elif input_filename:
 		load_file(input_filename)
 
-	update_user_id_in_sample_batch()
+	# update_user_id_in_sample_batch()
 	update_user_id_in_sample()  # this will go back and fill in individual errors. The batch simply doesn't return errors
 
 	# if not tweet_id and not screenname and not input_filename:
