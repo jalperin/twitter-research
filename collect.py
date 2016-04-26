@@ -62,6 +62,10 @@ def load_file(filename):
 					pass
 
 def get_user_from_tweet(tweet_id):
+	'''
+	Get an individual user object based on a Tweet id
+	Returns an dict: tweet_id: author object
+	'''
 	while True:
 		try:
 			status = api.get_status(tweet_id)
@@ -73,12 +77,16 @@ def get_user_from_tweet(tweet_id):
 				time.sleep(15 * 60 + 10)
 				continue
 
-			return {tweet_id, error}
+			return {tweet_id: error}
 
 	print 'something else went wrong: ' + tweet_id
 	return False
 
 def get_user_from_tweet_batch(tweet_ids):
+	'''
+	Get a bunch of user objects from an array of tweet_ids
+	returns a dict: tweet_id: author object
+	'''
 	while True:
 		try:
 			statuses = api.statuses_lookup(tweet_ids)
@@ -158,21 +166,23 @@ if __name__ == '__main__':
 	ap.add_argument("-t", "--tweet-id", required=False, help="Specify a Tweet ID of the user you are interested in")
 	ap.add_argument("-s", "--screen-name", required=False, help="Screen name or user ID of twitter user")
 	ap.add_argument("-f", "--input-file", required=False, help="Specify a dump file from ESBI")
+	ap.add_argument("-b", "--batch", required=False, help="Try to fetch everything from DB in 100 tweet batches", action="store_true")
+	ap.add_argument("-i", "--individual", required=False, help="Fetch tweets that have not been found, one at a time", action="store_true")
 	args = vars(ap.parse_args())
 
 	tweet_id = args['tweet_id']
 	screenname = args['screen_name']
 	input_filename = args['input_file']
+	
+	if input_filename:
+		load_file(input_filename)
 
 	if tweet_id: 
 		get_user_from_tweet(tweet_id)
-	elif input_filename:
-		load_file(input_filename)
 
-	# update_user_id_in_sample_batch()
-	update_user_id_in_sample()  # this will go back and fill in individual errors. The batch simply doesn't return errors
+	if args['batch']: 
+		update_user_id_in_sample_batch()
 
-	# if not tweet_id and not screenname and not input_filename:
-	# 	print "You need at least one input. "
-	# 	exit(1)
-
+	if args['individual']:
+		# this will go back and fill in individual errors. The batch simply doesn't return errors
+		update_user_id_in_sample()
