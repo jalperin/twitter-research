@@ -76,7 +76,11 @@ def __save_tweet(tweet_id, tweet, error = None):
 		litecur = litecon.cursor()
 
 		if error: 
-			litecur.execute('UPDATE sample SET error = ?, modified = ? WHERE tweet_id = ?', (error[0][0]['message'], now, tweet_id))	
+			try: 
+				m = error[0][0]['message']
+			except:
+				m = str(error)
+			litecur.execute('UPDATE sample SET error = ?, modified = ? WHERE tweet_id = ?', (m, now, tweet_id))	
 
 		else: 
 			litecur.execute('UPDATE sample SET tweet = ?, modified = ? WHERE tweet_id = ?', (json.dumps(tweet._json), now, tweet_id))
@@ -96,7 +100,11 @@ def __save_timeline(user_id, timeline, error = None):
 		litecur = litecon.cursor()
 
 		if error: 
-			litecur.execute('UPDATE users SET timeline_error = ?, timeline_modified = ? WHERE user_id = ?', (error[0][0]['message'], now, user_id))	
+			try: 
+				m = error[0][0]['message']
+			except:
+				m = str(error)
+			litecur.execute('UPDATE users SET timeline_error = ?, timeline_modified = ? WHERE user_id = ?', (m, now, user_id))	
 
 		else: 
 			litecur.execute('UPDATE users SET timeline = ?, timeline_modified = ? WHERE user_id = ?', (json.dumps([s._json for s in timeline]), now, user_id))
