@@ -2,6 +2,8 @@ import tweepy
 import re
 import json
 
+import botornot
+
 import sqlite3 as lite
 
 import datetime, time, os, sys
@@ -25,7 +27,7 @@ with litecon:
 	litecur.execute("CREATE INDEX IF NOT EXISTS sample_modified ON sample (modified)")
 
 	# the users that were found
-	litecur.execute("CREATE TABLE IF NOT EXISTS users (user_id TEXT, screen_name TEXT, user_object TEXT, timeline TEXT, timeline_error TEXT, timeline_modified TEXT, user_modified TEXT)")
+	litecur.execute("CREATE TABLE IF NOT EXISTS users (user_id TEXT, screen_name TEXT, user_object TEXT, timeline TEXT, timeline_error TEXT, timeline_modified TEXT, user_modified TEXT, botornot_score REAL, botornot TEXT, botornot_modified TEXT)")
 	litecur.execute("CREATE UNIQUE INDEX IF NOT EXISTS users_user_id ON users (user_id)")
 	litecur.execute("CREATE INDEX IF NOT EXISTS users_screen_name ON users (screen_name)")	
 
@@ -47,6 +49,16 @@ auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
 auth.set_access_token(access_token, access_token_secret)
 # set up access to the Twitter API
 api = tweepy.API(auth, wait_on_rate_limit=True, wait_on_rate_limit_notify=True)
+
+twitter_app_auth = {
+    'consumer_key': consumer_key,
+    'consumer_secret': consumer_secret,
+    'access_token': access_token,
+    'access_token_secret': access_token_secret,
+  }
+bon = botornot.BotOrNot(**twitter_app_auth)
+bon.wait_on_rate_limit = True
+bon.wait_on_rate_limit_notify = True
 
 def load_file(filename):
 	with open(filename, 'r') as f:
@@ -108,6 +120,25 @@ def __save_timeline(user_id, timeline, error = None):
 
 		else: 
 			litecur.execute('UPDATE users SET timeline = ?, timeline_modified = ? WHERE user_id = ?', (json.dumps([s._json for s in timeline]), now, user_id))
+
+def __save_botornot(user_id, botornot, error = None):
+	'''
+	Do the actual SQLite update with the info collected
+	'''
+	now = datetime.datetime.today().strftime("%Y-%m-%d %H:%M:%S")
+	with litecon:
+		litecur = litecon.cursor()
+
+		if error: 
+			try: 
+				m = error[0][0]['message']
+			except:
+				m = str(error)
+			litecur.execute('UPDATE users SET botornot = ?, botornot_score = ?, botornot_modified = ? WHERE user_id = ?', (m, -1, now, user_id))	
+
+		else: 
+			litecur.execute('UPDATE users SET botornot = ?, botornot_score = ?, botornot_modified = ? WHERE user_id = ?', (json.dumps(botornot), botornot['score'], now, user_id))
+
 
 def get_tweets_in_sample():
 	'''
@@ -174,6 +205,27 @@ def get_timelines_batch():
 				except tweepy.TweepError, error: 
 					__save_timeline(user_id, None, error)
 
+def get_botornot():
+    '''
+    Query the Bot or Not API for users we know exist (we've saved)
+    '''
+    with litecon:
+        litecur = litecon.cursor()
+        litecur.execute('SELECT user_id, screen_name FROM users WHERE botornot IS NULL')
+
+    while (True):      
+    	# go 100 at a time so we're not hitting the DB so much
+        users = litecur.fetchmany(100)
+        if not users: break
+
+        for (user_id, screen_name) in users:
+            try:
+                response = bon.check_account('@%s' % screen_name)
+                __save_botornot(user_id, response)
+            except tweepy.TweepError, error: 
+                __save_botornot(user_id, None, error)
+
+
 
 if __name__ == '__main__':
 	ap = argparse.ArgumentParser()
@@ -184,6 +236,7 @@ if __name__ == '__main__':
 	ap.add_argument("--individual", required=False, help="Fetch tweets that have not been found, one at a time", action="store_true")
 	ap.add_argument("--timelines", required=False, help="Fetch the timeslines of users", action="store_true")	
 	ap.add_argument("--friends", required=False, help="Get all the friends of a user id")
+	ap.add_argument("--bon", required=False, help="Get bot or not scores")
 	args = vars(ap.parse_args())
 
 	tweet_id = args['tweet_id']
