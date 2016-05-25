@@ -236,7 +236,7 @@ if __name__ == '__main__':
 	ap.add_argument("--individual", required=False, help="Fetch tweets that have not been found, one at a time", action="store_true")
 	ap.add_argument("--timelines", required=False, help="Fetch the timeslines of users", action="store_true")	
 	ap.add_argument("--friends", required=False, help="Get all the friends of a user id")
-	ap.add_argument("--bon", required=False, help="Get bot or not scores")
+	ap.add_argument("--bon", required=False, help="Get bot or not scores", action="store_true")
 	args = vars(ap.parse_args())
 
 	tweet_id = args['tweet_id']
@@ -262,3 +262,6 @@ if __name__ == '__main__':
 
 	if args['friends']:
 		get_friends_from_user_id(args['friends'])
+
+	if args['bon']:
+		get_botornot()
