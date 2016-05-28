@@ -55,10 +55,11 @@ twitter_app_auth = {
     'consumer_secret': consumer_secret,
     'access_token': access_token,
     'access_token_secret': access_token_secret,
+    'wait_on_rate_limit': True, 
+    'wait_on_rate_limit_notify': True
   }
 bon = botornot.BotOrNot(**twitter_app_auth)
-bon.wait_on_rate_limit = True
-bon.wait_on_rate_limit_notify = True
+bon.twitter_api.wait_on_rate_limit_notify = True
 
 def load_file(filename):
 	with open(filename, 'r') as f:
