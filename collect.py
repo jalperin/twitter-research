@@ -226,8 +226,67 @@ def get_botornot():
             except tweepy.TweepError, error: 
                 __save_botornot(user_id, None, error)
 
+def __save_network(endpoint, user_id, ids, error = None):
+    '''
+    Do the actual SQLite update with the info collected
+    '''
+    now = datetime.datetime.today().strftime("%Y-%m-%d %H:%M:%S")
+    with litecon:
+        litecur = litecon.cursor()
+        
+        if error: 
+            try: 
+                m = error[0][0]['message']
+            except:
+                m = str(error)
+                
+            print "Error: ", user_id, m
+            litecur.execute('INSERT INTO %s (user_id, %s_id, modified) VALUES (?, ?, ?)' % (endpoint, endpoint[:-1]), (user_id, -1, now))
+        else:
+            print 'saving', len(ids)
+            for f in ids:
+                try: 
+                    litecur.execute('INSERT INTO %s (user_id, %s_id, modified) VALUES (?, ?, ?)' % (endpoint, endpoint[:-1]), (user_id, f, now))
+                except lite.IntegrityError:
+                    pass # ignore duplicates, they wont change the network
+                    
+def get_friends(user_id = None):
+    get_network('friends', user_id)
 
+def get_followers(user_id = None):
+    get_network('followers', user_id)
+            
+def get_network(endpoint, user_id = None):
+    '''
+    Get the friends/followers list for all users (or for a specific user
+    '''
+    if user_id is None:       
+        while (True):
+            with litecon:
+                litecur = litecon.cursor()
+                litecur.execute('SELECT u.user_id FROM users u LEFT JOIN %s f ON (u.user_id = f.user_id) WHERE f.user_id IS NULL' % endpoint)
+        
+            # go 100 at a time so we're not hitting the DB so much
+            users = [u[0] for u in litecur.fetchmany(100)]
+            if not users: break
 
+            for user_id in users:
+                ids = get_network(endpoint, user_id)
+    else: 
+        try:
+            ids = []
+            # a user_id was passed in, fetch it and return a friends list
+            if endpoint == 'friends':
+                for page in tweepy.Cursor(api.friends_ids, id=user_id).pages():
+                    ids.extend(page)
+            elif endpoint == 'followers':
+                for page in tweepy.Cursor(api.followers_ids, id=user_id).pages():
+                    ids.extend(page)                           
+
+            __save_network(endpoint, user_id, ids)
+        except tweepy.TweepError, error: 
+            __save_network(endpoint, user_id, None, error)
+        
 if __name__ == '__main__':
 	ap = argparse.ArgumentParser()
 	ap.add_argument("--tweet-id", required=False, help="Specify a Tweet ID of the user you are interested in")
@@ -236,7 +295,8 @@ if __name__ == '__main__':
 	ap.add_argument("--batch", required=False, help="Try to fetch everything from DB in 100 tweet batches", action="store_true")
 	ap.add_argument("--individual", required=False, help="Fetch tweets that have not been found, one at a time", action="store_true")
 	ap.add_argument("--timelines", required=False, help="Fetch the timeslines of users", action="store_true")	
-	ap.add_argument("--friends", required=False, help="Get all the friends of a user id")
+	ap.add_argument("--friends", required=False, help="Get all the friends of a user id", action="store_true")
+	ap.add_argument("--followers", required=False, help="Get all the friends of a user id", action="store_true")	
 	ap.add_argument("--bon", required=False, help="Get bot or not scores", action="store_true")
 	args = vars(ap.parse_args())
 
@@ -262,7 +322,10 @@ if __name__ == '__main__':
 		get_timelines_batch()
 
 	if args['friends']:
-		get_friends_from_user_id(args['friends'])
+		get_friends()
+
+	if args['followers']:
+		get_followers()
 
 	if args['bon']:
 		get_botornot()
