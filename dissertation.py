@@ -1,0 +1,79 @@
+# -*- coding: utf-8 -*-
+# <nbformat>3.0</nbformat>
+
+# <codecell>
+
+import tweepy
+import re
+import json
+
+import random
+
+from time import sleep
+
+import sqlite3 as lite
+
+import datetime, time, os, sys
+import argparse, ConfigParser
+Config = ConfigParser.ConfigParser()
+Config.read('config.cnf')
+
+consumer_key = Config.get('twitterdissertation', 'consumer_key')
+consumer_secret = Config.get('twitterdissertation', 'consumer_secret')
+access_token = Config.get('twitterdissertation', 'access_token')
+access_token_secret = Config.get('twitterdissertation', 'access_token_secret')
+
+auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
+auth.set_access_token(access_token, access_token_secret)
+# set up access to the Twitter API
+api = tweepy.API(auth, wait_on_rate_limit=True, wait_on_rate_limit_notify=True)
+
+# <codecell>
+
+with open('tweetabledissertation.md') as f:
+    diss=f.read().strip()                                        
+
+# <codecell>
+
+import nltk.data
+from nltk import word_tokenize
+sent_detector = nltk.data.load('tokenizers/punkt/english.pickle')
+
+# <codecell>
+
+diss_sent = sent_detector.tokenize(diss)
+
+# <codecell>
+
+tw = "The Public Impact of Latin America's Approach to Open Access, by Juan Pablo Alperin"
+api.update_status(tw)
+
+# <codecell>
+
+i = 0
+try: 
+    for sent in diss_sent[110:]: 
+        sent = sent.strip()
+        tw = ''
+        for token in sent.split(' '): 
+            if len(tw) + len(token) < 140:
+                tw = "%s %s" % (tw, token)
+            else:
+                time.sleep(random.randrange(2*60,4*60))
+                try: 
+                    api.update_status(tw)
+                except tweepy.TweepError, error:
+                    print error
+                    print "at sentence: " + i
+                tw = token
+      
+        i = i + 1
+        time.sleep(random.randrange(2*60,4*60))
+        api.update_status(tw)
+
+except KeyboardInterrupt, error:
+    print "interrupted at: " + str(i)
+    raise 
+    
+            
+
