@@ -1,8 +1,3 @@
-# -*- coding: utf-8 -*-
-# <nbformat>3.0</nbformat>
-
-# <codecell>
-
 import tweepy
 import re
 import json
@@ -28,12 +23,9 @@ auth.set_access_token(access_token, access_token_secret)
 # set up access to the Twitter API
 api = tweepy.API(auth, wait_on_rate_limit=True, wait_on_rate_limit_notify=True)
 
-# <codecell>
-
 with open('tweetabledissertation.md') as f:
-    diss=f.read().strip()                                        
+    diss=f.read().strip().decode('utf8')
 
-# <codecell>
 
 import nltk.data
 from nltk import word_tokenize
@@ -45,31 +37,43 @@ diss_sent = sent_detector.tokenize(diss)
 
 # <codecell>
 
-tw = "The Public Impact of Latin America's Approach to Open Access, by Juan Pablo Alperin"
-api.update_status(tw)
+#tw = "The Public Impact of Latin America's Approach to Open Access, by Juan Pablo Alperin"
+#api.update_status(tw)
 
 # <codecell>
 
-i = 0
+i = 518 
 try: 
-    for sent in diss_sent[110:]: 
-        sent = sent.strip()
+    for sent in diss_sent[i:]: 
+        sent = sent.strip().encode('utf8')
         tw = ''
         for token in sent.split(' '): 
-            if len(tw) + len(token) < 140:
+            if len(token) >= 140: continue
+
+            if len("%s %s" % (tw, token)) < 140:
                 tw = "%s %s" % (tw, token)
-            else:
-                time.sleep(random.randrange(2*60,4*60))
+            elif len(tw) < 140:
                 try: 
+                    time.sleep(random.randrange(2*60,4*60))
                     api.update_status(tw)
                 except tweepy.TweepError, error:
                     print error
-                    print "at sentence: " + i
+                    print "at sentence: %s" % i
+                tw = token
+            else:
+                print "should not happen"
+                print tw
+                print token
                 tw = token
       
         i = i + 1
-        time.sleep(random.randrange(2*60,4*60))
-        api.update_status(tw)
+        try:
+            if len(tw) < 140: 
+                time.sleep(random.randrange(2*60,4*60))
+                api.update_status(tw)
+        except tweepy.TweepError, error:
+            print error
+            print "at sentence (end of loop): %s" % i
 
 except KeyboardInterrupt, error:
     print "interrupted at: " + str(i)
