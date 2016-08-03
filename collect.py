@@ -18,11 +18,9 @@ with litecon:
 # set up SQL tables
 	litecur = litecon.cursor()
 	# the sample, with two columns for either the Tweet itself, or the error in trying to retrieve it
-	litecur.execute("CREATE TABLE IF NOT EXISTS sample (old_screen_name TEXT, max_tweet_time TEXT, stratum INT, tweet_id TEXT, tweet TEXT, error TEXT, modified TEXT)")
+	litecur.execute("CREATE TABLE IF NOT EXISTS sample (doi TEXT, old_screen_name TEXT, tweet_id TEXT, tweet TEXT, error TEXT, modified TEXT)")
 
 	litecur.execute("CREATE INDEX IF NOT EXISTS sample_old_screen_name ON sample (old_screen_name)")
-	litecur.execute("CREATE INDEX IF NOT EXISTS sample_max_tweet_time ON sample (max_tweet_time)")
-	litecur.execute("CREATE INDEX IF NOT EXISTS sample_stratum ON sample (stratum)")
 	litecur.execute("CREATE UNIQUE INDEX IF NOT EXISTS sample_tweet_id ON sample (tweet_id)")
 	litecur.execute("CREATE INDEX IF NOT EXISTS sample_modified ON sample (modified)")
 
@@ -69,13 +67,12 @@ def load_file(filename):
 			litecur = litecon.cursor()
 			for l in f:
 				l = [x.strip('"') for x in l.strip().split('\t')]
-				screenname = l[0]
-				max_tweet_time = l[1]
-				stratum = l[2]
-				tweet_id = l[3]
+				doi = l[0]
+				screenname = l[1]
+				tweet_id = l[2]
 
 				try:
-					litecur.execute('INSERT INTO sample (old_screen_name, max_tweet_time, stratum, tweet_id) VALUES (?, ?, ?, ?)', (screenname, max_tweet_time, stratum, tweet_id))
+					litecur.execute('INSERT INTO sample (doi, old_screen_name, tweet_id) VALUES (?, ?, ?)', (doi, screenname, tweet_id))
 				except lite.IntegrityError:
 					# don't worry about duplicates
 					pass
