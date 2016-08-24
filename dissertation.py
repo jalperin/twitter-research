@@ -42,7 +42,7 @@ diss_sent = sent_detector.tokenize(diss)
 
 # <codecell>
 
-i = 1 
+i = 3 
 try: 
     for sent in diss_sent[i:]: 
         sent = sent.strip().encode('utf8')
@@ -74,6 +74,11 @@ try:
         except tweepy.TweepError, error:
             print error
             print "at sentence (end of loop): %s" % i
+
+        if datetime.datetime.now().hour == 2:
+            # even bots go to bed
+            api.update_status('Time for bed! See you in 6 hours folks: %s' % datetime.datetime.now().isoformat())
+            time.sleep(60*60*6)
 
 except KeyboardInterrupt, error:
     print "interrupted at: " + str(i)

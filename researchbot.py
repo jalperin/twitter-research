@@ -96,5 +96,9 @@ with litecon:
             print user_id_str, screen_name
             raise
 
-        time.sleep(random.randrange(4*60,6*60))
+        time.sleep(random.randrange(5*60,7*60))
+        if datetime.datetime.now().hour == 2:
+            # even bots go to bed
+            api.update_status('Goodnight @juancommander. %s' % datetime.datetime.now().isoformat())
+            time.sleep(60*60*6)
         
