@@ -38,7 +38,7 @@ variants = range(1,7) + range(13,19)
 
 with litecon:
     litecur = litecon.cursor()
-    litecur.execute("SELECT DISTINCT td.user_id_str, td.screen_name, td.id_str FROM tweet_data td LEFT JOIN question_data qd ON (td.user_id_str = qd.user_id_str) WHERE qd.variant IS NULL ORDER BY td.created_at")
+    litecur.execute("SELECT DISTINCT td.user_id_str, td.screen_name, MIN(td.id_str) FROM tweet_data td LEFT JOIN question_data qd ON (td.user_id_str = qd.user_id_str) WHERE qd.variant IS NULL GROUP BY 1, 2 ORDER BY td.created_at")
     # this needs to run after harvester insert so archive_id is present
     users = litecur.fetchall()
     
