@@ -43,8 +43,10 @@ def test_mentions():
     testtweet = api.update_status(t)
 
     print 'Testing mentions at: %s' % datetime.datetime.now().isoformat(), 
+    sys.stdout.flush()
     for i in [1,2,3]:
         print '.'*i + ' ', 
+        sys.stdout.flush()
         time.sleep(30*i)
         mentions = api2.mentions_timeline(count = 5)
         for mention in mentions: 
@@ -54,6 +56,7 @@ def test_mentions():
                 return True
     
     api.destroy_status(testtweet.id)
+    print 
     print 'mentions not working as of %s' % datetime.datetime.now().isoformat()
     return False
 
