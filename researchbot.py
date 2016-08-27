@@ -28,13 +28,41 @@ auth.set_access_token(access_token, access_token_secret)
 # set up access to the Twitter API
 api = tweepy.API(auth, wait_on_rate_limit=True, wait_on_rate_limit_notify=True)
 
-# <codecell>
+consumer_key = Config.get('twittersfupubresearch', 'consumer_key')
+consumer_secret = Config.get('twittersfupubresearch', 'consumer_secret')
+access_token = Config.get('twittersfupubresearch', 'access_token')
+access_token_secret = Config.get('twittersfupubresearch', 'access_token_secret')
+
+auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
+auth.set_access_token(access_token, access_token_secret)
+# set up access to the Twitter API
+api2 = tweepy.API(auth, wait_on_rate_limit=True, wait_on_rate_limit_notify=True)
+
+def test_mentions():
+    t = 'ah ah ah ah staying alive @sfupubresearch, staying alive %s %s' % ( datetime.datetime.now().isoformat(), ''.join([random.choice('abcdefghijklmnopqrstuvwxyz') for x in range(8)]))
+    testtweet = api.update_status(t)
+
+    print 'Testing mentions at: %s' % datetime.datetime.now().isoformat(), 
+    for i in [1,2,3]:
+        print '.'*i + ' ', 
+        time.sleep(30*i)
+        mentions = api2.mentions_timeline(count = 5)
+        for mention in mentions: 
+            if mention.id == testtweet.id:
+                api.destroy_status(testtweet.id)
+                print '%s was mentioned' % testtweet.id
+                return True
+    
+    api.destroy_status(testtweet.id)
+    print 'mentions not working as of %s' % datetime.datetime.now().isoformat()
+    return False
 
 litecon = lite.connect('new_yorker_2.0.db')
 
 # <codecell>
 
 variants = range(1,7) + range(13,19)
+last_checked_mentions = datetime.datetime(1980, 5, 8) # some date in the past
 
 with litecon:
     litecur = litecon.cursor()
@@ -43,6 +71,12 @@ with litecon:
     users = litecur.fetchall()
     
     for i, user in enumerate(users): 
+        #before we start, check mentions
+        if (datetime.datetime.now() - last_checked_mentions > datetime.timedelta(hours=1)):
+            while not test_mentions():
+                time.sleep(60*60) # keep sleeping in 1 hour blocks until it works
+            print 
+
         user_id_str = user[0]
         screen_name = user[1]
         tweet_id = user[2]
