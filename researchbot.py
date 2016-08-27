@@ -53,11 +53,13 @@ def test_mentions():
             if mention.id == testtweet.id:
                 api.destroy_status(testtweet.id)
                 print '%s was mentioned' % testtweet.id
+                sys.stdout.flush()
                 return True
     
     api.destroy_status(testtweet.id)
     print 
     print 'mentions not working as of %s' % datetime.datetime.now().isoformat()
+    sys.stdout.flush()
     return False
 
 litecon = lite.connect('new_yorker_2.0.db')
