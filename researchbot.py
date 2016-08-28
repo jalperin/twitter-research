@@ -65,7 +65,7 @@ litecon = lite.connect('new_yorker_2.0.db')
 # <codecell>
 
 variants = range(1,7) + range(13,19)
-last_checked_mentions = datetime.datetime.now()
+last_checked_mentions = datetime.datetime(1980, 5, 8) # some date in the past
 
 with litecon:
     litecur = litecon.cursor()
@@ -77,8 +77,8 @@ with litecon:
         #before we start, check mentions
         if (datetime.datetime.now() - last_checked_mentions > datetime.timedelta(hours=1)):
             while not test_mentions():
-                last_checked_mentions = datetime.datetime.now()
                 time.sleep(60*60) # keep sleeping in 1 hour blocks until it works
+            last_checked_mentions = datetime.datetime.now()    
             print 
 
         user_id_str = user[0]
