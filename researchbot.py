@@ -51,12 +51,10 @@ def test_mentions():
         mentions = api2.mentions_timeline(count = 5)
         for mention in mentions: 
             if mention.id == testtweet.id:
-                api.destroy_status(testtweet.id)
                 print '%s was mentioned' % testtweet.id
                 sys.stdout.flush()
                 return True
     
-    api.destroy_status(testtweet.id)
     print 
     print 'mentions not working as of %s' % datetime.datetime.now().isoformat()
     sys.stdout.flush()
