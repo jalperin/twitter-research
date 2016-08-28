@@ -42,7 +42,7 @@ diss_sent = sent_detector.tokenize(diss)
 
 # <codecell>
 
-i = 3 
+i = 400 
 try: 
     for sent in diss_sent[i:]: 
         sent = sent.strip().encode('utf8')
@@ -59,6 +59,8 @@ try:
                 except tweepy.TweepError, error:
                     print error
                     print "at sentence: %s" % i
+                    if error[0]['code'] == 261:
+                        exit(1)
                 tw = token
             else:
                 print "should not happen"
@@ -70,10 +72,12 @@ try:
         try:
             if len(tw) < 138: 
                 time.sleep(random.randrange(2*60,4*60))
-                api.update_status(tw + "~")
+                api.update_status(tw + "%")
         except tweepy.TweepError, error:
             print error
             print "at sentence (end of loop): %s" % i
+            if error[0]['code'] == 261:
+                exit(1)
 
         if datetime.datetime.now().hour == 2:
             # even bots go to bed
