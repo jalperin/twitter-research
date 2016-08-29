@@ -78,7 +78,8 @@ try:
             print "at sentence (end of loop): %s" % i
             if error.api_code == 261:
                 exit(1)
-            time.sleep(random.randrange(2*60,4*60))
+
+        time.sleep(random.randrange(2*60,4*60))
 
         if datetime.datetime.now().hour == 2:
             # even bots go to bed
