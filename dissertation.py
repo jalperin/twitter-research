@@ -58,6 +58,7 @@ try:
                 except tweepy.TweepError, error:
                     print error
                     print "at sentence: %s" % i
+                    print datetime.datetime.now().isoformat()
                     if error.api_code == 261:
                         exit(1)
 
@@ -76,6 +77,7 @@ try:
         except tweepy.TweepError, error:
             print error
             print "at sentence (end of loop): %s" % i
+            print datetime.datetime.now().isoformat()
             if error.api_code == 261:
                 exit(1)
 
@@ -87,5 +89,6 @@ try:
             time.sleep(60*60*6)
 
 except KeyboardInterrupt, error:
+    print datetime.datetime.now().isoformat()
     print "interrupted at: " + str(i)
     raise 

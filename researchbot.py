@@ -132,6 +132,7 @@ with litecon:
         except tweepy.TweepError, error: 
             print error
             print user_id_str, screen_name
+            print datetime.datetime.now().isoformat()
             raise
 
         time.sleep(random.randrange(5*60,7*60))
