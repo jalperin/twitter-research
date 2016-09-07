@@ -51,7 +51,6 @@ def test_mentions():
         mentions = api2.mentions_timeline(count = 5)
         for mention in mentions: 
             if mention.id == testtweet.id:
-                api2.create_favorite(mention.id)
                 print '%s was mentioned' % testtweet.id
                 sys.stdout.flush()
                 return True
