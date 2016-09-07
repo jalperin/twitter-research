@@ -25,7 +25,7 @@ api = tweepy.API(auth, wait_on_rate_limit=True, wait_on_rate_limit_notify=True)
 
 litecon = lite.connect('new_yorker_2.0.db')
 
-since_id = '652417479537479680' # first go at this new approach
+since_id = '773364851649437696' # first go at this new approach
 
 try: 
 	while True:
@@ -38,6 +38,12 @@ try:
 				try: 
 					litecur.execute('INSERT INTO response_data (user_id_str, tweet_id, time_received, tweet_text, tweet) VALUES (?,?,?,?,?)', (tweet.user.id_str, tweet.id_str, tweet.created_at, tweet.text, json.dumps(tweet._json)))
 					litecon.commit()
+
+					# if it's not a duplicate, we can consider favouriting it
+					if random.randint(1,2) == 1:
+						api.create_favorite(tweet.id_str)
+					elif random.randint(1,10) == 10:
+						api.update_status('@%s Thanks for responding%s %s' % (tweet.user.screen_name, '!'*random.randin(1,3), '~'*random.randint(1,5)), in_reply_to_status_id=tweet.id)
 				except lite.IntegrityError:
 					# duplicates not a big deal, just not saving them is fine
 					pass
