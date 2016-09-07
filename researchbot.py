@@ -51,6 +51,7 @@ def test_mentions():
         mentions = api2.mentions_timeline(count = 5)
         for mention in mentions: 
             if mention.id == testtweet.id:
+                api2.create_favorite(mention.id)
                 print '%s was mentioned' % testtweet.id
                 sys.stdout.flush()
                 return True
@@ -136,7 +137,7 @@ with litecon:
             raise
 
         time.sleep(random.randrange(5*60,7*60))
-        if datetime.datetime.now().hour == 2:
+        if datetime.datetime.now().hour == 4:
             # even bots go to bed
             api.update_status('Goodnight @juancommander. %s' % datetime.datetime.now().isoformat())
             time.sleep(60*60*6)

@@ -83,7 +83,7 @@ try:
 
         time.sleep(random.randrange(2*60,4*60))
 
-        if datetime.datetime.now().hour == 2:
+        if datetime.datetime.now().hour == 4:
             # even bots go to bed
             api.update_status('Time for bed! See you in 6 hours folks: %s' % datetime.datetime.now().isoformat())
             time.sleep(60*60*6)
