@@ -65,6 +65,8 @@ litecon = lite.connect('new_yorker_2.0.db')
 # <codecell>
 
 variants = range(1,7) + range(13,19)
+random.shuffle(variants) # so that we don't test variant 1 more than the others on restarts
+
 last_checked_mentions = datetime.datetime(1980, 5, 8) # some date in the past
 
 with litecon:
