@@ -42,7 +42,7 @@ diss_sent = sent_detector.tokenize(diss)
 
 # <codecell>
 
-i = 490 
+i = 0 
 try: 
     for sent in diss_sent[i:]: 
         sent = sent.strip().encode('utf8')
@@ -50,11 +50,11 @@ try:
         for token in sent.split(' '): 
             if len(token) >= 138: continue
 
-            if len("%s %s" % (tw, token)) < 138:
+            if len("%s %s" % (tw, token)) < 137:
                 tw = "%s %s" % (tw, token)
-            elif len(tw) < 138:
+            elif len(tw) < 137:
                 try: 
-                    api.update_status(tw + "%")
+                    api.update_status(tw + "*^")
                 except tweepy.TweepError, error:
                     print error
                     print "at sentence: %s" % i
@@ -71,8 +71,8 @@ try:
       
         i = i + 1
         try:
-            if len(tw) < 138: 
-                api.update_status(tw + "%")
+            if len(tw) < 137: 
+                api.update_status(tw + "*^")
         except tweepy.TweepError, error:
             print error
             print "at sentence (end of loop): %s" % i
@@ -89,6 +89,3 @@ try:
 except KeyboardInterrupt, error:
     print "interrupted at: " + str(i)
     raise 
-    
-            
-
