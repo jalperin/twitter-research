@@ -278,7 +278,11 @@ def get_network(endpoint, user_id = None):
                     ids.extend(page)
             elif endpoint == 'followers':
                 for page in tweepy.Cursor(api.followers_ids, id=user_id).pages():
-                    ids.extend(page)                           
+                    ids.extend(page)
+
+            # put in something so that we know we've gone after this user
+            if len(ids) == 0:
+				__save_network(endpoint, user_id, None, 'No %s found' % endpoint)
 
             __save_network(endpoint, user_id, ids)
         except tweepy.TweepError, error: 
