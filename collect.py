@@ -11,7 +11,7 @@ import argparse, ConfigParser
 Config = ConfigParser.ConfigParser()
 Config.read('config.cnf')
 
-litecon = lite.connect('data/twitter.db')
+litecon = lite.connect('data/bmcTwitter.db')
 
 with litecon:
 
@@ -38,10 +38,10 @@ with litecon:
 	litecur.execute("CREATE UNIQUE INDEX IF NOT EXISTS followers_user_follower_id ON followers (user_id, follower_id)")
 
 
-consumer_key = Config.get('twitter', 'consumer_key')
-consumer_secret = Config.get('twitter', 'consumer_secret')
-access_token = Config.get('twitter', 'access_token')
-access_token_secret = Config.get('twitter', 'access_token_secret')
+consumer_key = Config.get('twitterdissertation', 'consumer_key')
+consumer_secret = Config.get('twitterdissertation', 'consumer_secret')
+access_token = Config.get('twitterdissertation', 'access_token')
+access_token_secret = Config.get('twitterdissertation', 'access_token_secret')
 
 auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
 auth.set_access_token(access_token, access_token_secret)
@@ -100,7 +100,6 @@ def __save_tweet(tweet_id, tweet, error = None):
 				# don't worry about duplicates
 				pass
 
-
 def __save_timeline(user_id, timeline, error = None):
 	'''
 	Do the actual SQLite update with the info collected
@@ -145,7 +144,7 @@ def get_tweets_in_sample():
 	'''
 	with litecon:
 		litecur = litecon.cursor()
-		litecur.execute('SELECT tweet_id FROM sample WHERE tweet IS NULL AND error IS NULL')
+		litecur.execute("SELECT tweet_id, old_screen_name FROM sample WHERE tweet IS NULL")
 		sampled = litecur.fetchall()
 
 		for s in sampled:
@@ -156,9 +155,23 @@ def get_tweets_in_sample():
 
 			except tweepy.TweepError, error: 
 				# bit hacky, we're passing a tweet_id instead of a tweet here
-				__save_tweet(tweet_id, None, error)
-			
-			
+				try: 
+					user = api.get_user(screen_name=s[1])
+					try:
+						error[0][0]['message'] += '; Found by screen_name'
+						__save_tweet(tweet_id, None, error)
+						now = datetime.datetime.today().strftime("%Y-%m-%d %H:%M:%S")
+						litecur.execute('INSERT INTO users (user_id, screen_name, user_object, user_modified) VALUES (?, ?, ?, ?)', (user.id, user.screen_name, json.dumps(user._json), now))
+					except lite.IntegrityError:
+						# don't worry about duplicates
+						pass
+
+				except tweepy.TweepError, error2: 
+					__save_tweet(tweet_id, None, error) # leave the original error
+
+		# now try all the errors one more time
+		litecur.execute('SELECT tweet_id FROM sample WHERE tweet IS NULL AND error IS NOT NULL')
+		sampled = litecur.fetchall()
 
 def get_tweets_in_sample_batch():
 	'''
